@@ -1,0 +1,76 @@
+import java.util.HashMap;
+import java.util.Map;
+
+class TrieNode {
+    Map<Character, TrieNode> children;
+    String nextHop;
+
+    TrieNode() {
+        children = new HashMap<>();
+        nextHop = null;
+    }
+}
+
+class RoutingTrie {
+    private TrieNode root;
+
+    public RoutingTrie() {
+        root = new TrieNode();
+    }
+
+    // Convert IP address to binary string
+    private String ipToBinaryString(String ip) {
+        StringBuilder binaryString = new StringBuilder();
+        String[] parts = ip.split("\\.");
+        for (String part : parts) {
+            int num = Integer.parseInt(part);
+            String binaryPart = String.format("%8s", Integer.toBinaryString(num)).replace(' ', '0');
+            binaryString.append(binaryPart);
+        }
+        return binaryString.toString();
+    }
+
+    // Insert a prefix into the trie
+    public void insert(String ip, int prefixLength, String nextHop) {
+        String binaryIp = ipToBinaryString(ip);
+        TrieNode node = root;
+        for (int i = 0; i < prefixLength; i++) {
+            char bit = binaryIp.charAt(i);
+            node.children.putIfAbsent(bit, new TrieNode());
+            node = node.children.get(bit);
+        }
+        node.nextHop = nextHop;
+    }
+
+    // Find the longest prefix match for an IP address
+    public String findLongestPrefixMatch(String ip) {
+        String binaryIp = ipToBinaryString(ip);
+        TrieNode node = root;
+        String longestPrefixNextHop = null;
+
+        for (int i = 0; i < binaryIp.length(); i++) {
+            char bit = binaryIp.charAt(i);
+            if (node.children.containsKey(bit)) {
+                node = node.children.get(bit);
+                if (node.nextHop != null) {
+                    longestPrefixNextHop = node.nextHop;
+                }
+            } else {
+                break;
+            }
+        }
+
+        return longestPrefixNextHop;
+    }
+
+    public static void main(String[] args) {
+        RoutingTrie trie = new RoutingTrie();
+        trie.insert("192.168.0.0", 16, "Next hop A");
+        trie.insert("192.168.1.0", 24, "Next hop B");
+        trie.insert("192.168.1.128", 25, "Next hop C");
+
+        String ipToRoute = "192.168.1.130";
+        String nextHop = trie.findLongestPrefixMatch(ipToRoute);
+        System.out.println("Next hop for IP " + ipToRoute + " is: " + nextHop);
+    }
+}
